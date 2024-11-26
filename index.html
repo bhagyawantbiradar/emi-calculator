@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="number"], input[type="submit"], select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        input[type="number"] {
+            font-size: 16px;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>EMI Calculator</h2>
+
+        <label for="principal">Loan Amount (₹):</label>
+        <input type="number" id="principal" placeholder="Enter loan amount" required>
+
+        <label for="rate">Annual Interest Rate (%):</label>
+        <input type="number" id="rate" placeholder="Enter interest rate" required>
+
+        <label for="tenure">Loan Tenure:</label>
+        <div>
+            <input type="number" id="tenure" placeholder="Enter tenure" required>
+            <select id="tenure-unit">
+                <option value="months">Months</option>
+                <option value="years">Years</option>
+            </select>
+        </div>
+
+        <div class="button-container">
+            <input type="submit" value="Calculate" onclick="calculateEMI()">
+        </div>
+
+        <div class="results">
+            <h3>EMI: ₹<span id="emi-result">0</span></h3>
+            <h3>Total Interest: ₹<span id="total-interest">0</span></h3>
+        </div>
+
+        <div class="table-container">
+            <table id="amortization-table">
+                <thead>
+                    <tr>
+                        <th>Installment No.</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>EMI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Amortization table rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    // Function to calculate EMI, Total Interest and generate the amortization table
+    function calculateEMI() {
+        // Get input values
+        let principal = parseFloat(document.getElementById('principal').value);
+        let annualRate = parseFloat(document.getElementById('rate').value);
+        let tenureValue = parseFloat(document.getElementById('tenure').value);
+        let tenureUnit = document.getElementById('tenure-unit').value;
+
+        // Validate inputs
+        if (isNaN(principal) || principal <= 0 || isNaN(annualRate) || annualRate <= 0 || isNaN(tenureValue) || tenureValue <= 0) {
+            alert("Please enter valid values.");
+            return;
+        }
+
+        // Convert tenure to months
+        let months;
+        if (tenureUnit === "years") {
+            months = tenureValue * 12;
+        } else {
+            months = tenureValue;
+        }
+
+        // Monthly interest rate
+        let monthlyRate = annualRate / 12 / 100;
+
+        // EMI calculation formula
+        let emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+
+        // Total interest calculation
+        let totalInterest = emi * months - principal;
+
+        // Display results
+        document.getElementById('emi-result').innerText = emi.toFixed(2);
+        document.getElementById('total-interest').innerText = totalInterest.toFixed(2);
+
+        // Generate amortization table
+        generateAmortizationTable(principal, emi, monthlyRate, months);
+    }
+
+    // Function to generate the amortization table
+    function generateAmortizationTable(principal, emi, monthlyRate, months) {
+        // Clear existing table rows
+        let tableBody = document.getElementById('amortization-table').getElementsByTagName('tbody')[0];
+        tableBody.innerHTML = '';
+
+        let remainingPrincipal = principal;
+        let totalPrincipalPaid = 0;
+        let totalInterestPaid = 0;
+
+        for (let i = 1; i <= months; i++) {
+            // Interest for this month
+            let interest = remainingPrincipal * monthlyRate;
+            // Principal for this month
+            let principalPaid = emi - interest;
+            // Remaining principal after payment
+            remainingPrincipal -= principalPaid;
+
+            // Add row to the table
+            let row = tableBody.insertRow();
+            row.insertCell(0).textContent = i;
+            row.insertCell(1).textContent = principalPaid.toFixed(2);
+            row.insertCell(2).textContent = interest.toFixed(2);
+            row.insertCell(3).textContent = emi.toFixed(2);
+
+            // Accumulate total principal and interest paid
+            totalPrincipalPaid += principalPaid;
+            totalInterestPaid += interest;
+        }
+    }
+</script>
+
+</body>
+</html>
